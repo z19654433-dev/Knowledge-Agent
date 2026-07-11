@@ -1,16 +1,28 @@
-class ChatBot:
-    """一个简单的聊天机器人"""
+from openai import OpenAI
 
-    def __init__(self):
-        self.name = "AI Workspace"
+from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL
 
-    def reply(self, message: str) -> str:
-        """根据用户输入返回回复"""
 
-        if message == "你好":
-            return "你好，很高兴认识你！"
+client = OpenAI(
+    api_key=DEEPSEEK_API_KEY,
+    base_url=DEEPSEEK_BASE_URL
+)
 
-        if message == "你是谁":
-            return "我是 AI Workspace，一个正在成长的 AI 助手。"
 
-        return "这个问题我还不会回答，以后我会越来越聪明！"
+def chat(user_message):
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {
+                "role": "system",
+                "content": "你是一个友好的AI助手"
+            },
+            {
+                "role": "user",
+                "content": user_message
+            }
+        ]
+    )
+
+    return response.choices[0].message.content
