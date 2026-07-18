@@ -1,133 +1,188 @@
-# 🧠 AI Agent · Python + DeepSeek
+# 🧠 AI Agent · Python + DeepSeek + React
 
-> 一个基于 **DeepSeek API** 和 **FastAPI** 的智能 Agent 后端服务，具备长期记忆、多会话隔离、自主工具调用（Function Calling）能力，支持开箱即用的 RESTful API 与 Swagger 文档。
+> 一个基于 **DeepSeek API** 和 **FastAPI** 的智能 Agent 全栈项目，具备长期记忆、多会话隔离、自主工具调用（Function Calling）能力，附带 **React 聊天界面**。
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![DeepSeek](https://img.shields.io/badge/DeepSeek-API-orange.svg)](https://deepseek.com/)
+[![React](https://img.shields.io/badge/React-19+-61DAFB.svg)](https://react.dev/)
 
 ---
 
 ## ✨ 功能特性
 
-- 🤖 **Agent 架构**：模块化设计（Agent / Chatbot / Tools / Memory 分层解耦），易于扩展新工具。
-- 🧠 **自主决策调用工具**：基于 DeepSeek Function Calling，彻底告别硬编码 `if` 判断，由大模型动态决定是否调用工具、调用哪个工具、提取哪些参数。
-- 💬 **长期记忆**：通过 SQLite 保存对话历史，支持多会话（`session_id`），重启服务后上下文依然保留。
-- 🌐 **RESTful API 服务**：基于 FastAPI 提供 `/chat` 接口，自动生成 Swagger 交互文档（`/docs`），方便前端、移动端或第三方调用。
-- 🐳 **容器化就绪**：项目已配备 `Dockerfile`，可在标准服务器环境下快速构建并一键启动（本地构建受网络限制，不影响功能演示）。
-- ⚡ **纯 Python 实现**：无需复杂框架，核心代码清晰易读，适合学习与二次开发。
+- 🤖 **Agent 架构**：模块化设计（Agent / Tools / Memory / Chatbot 分层解耦）
+- 🧠 **Function Calling 自主决策**：DeepSeek 动态决定调用哪个工具、提取哪些参数
+- 🔧 **装饰器工具注册**：`@registry.register()` 一行注册，自动生成 JSON Schema
+- 🔒 **安全数学计算**：AST 白名单求值器，替换危险的 `eval()`
+- 💬 **长期记忆**：SQLite 持久化对话历史，支持多会话隔离
+- 🌐 **RESTful API**：FastAPI 提供 `/chat` 接口，Swagger 交互文档
+- 🎨 **React 前端**：Vite + TypeScript + Tailwind CSS 聊天界面
+- 📝 **结构化日志**：基于标准 logging，控制台彩色输出
+- 🐳 **容器化就绪**：Dockerfile 一键部署
 
 ---
 
 ## 🗂️ 项目结构
-AI-Agent/
-├── api.py # FastAPI 服务入口（V5）
-├── app.py # 终端交互入口（V1，已退休）
-├── config.py # 环境变量加载
-├── requirements.txt # 依赖清单
-├── Dockerfile # 容器化配置
-├── .dockerignore # 忽略文件
-├── agent/ # Agent 核心
-│ ├── agent.py # 调度器 + 记忆管理 + 工具调用协调
-│ └── tool_schemas.py # 工具定义（Function Calling 的 schema）
-├── chatbot/ # LLM 调用封装
-│ └── chatbot.py # OpenAI SDK 调用 DeepSeek
-├── tools/ # 工具实现
-│ ├── registry.py # 工具注册表
-│ ├── weather.py # 天气查询（示例）
-│ └── calculator.py # 计算器（示例）
-└── memory/ # 长期记忆
-├── memory.py # SQLite 数据库操作
-└── chat_history.db # 自动生成的数据库文件
 
-text
+```
+AI-Workspace/
+├── api.py                    # FastAPI 服务入口
+├── app.py                    # 终端交互入口（CLI）
+├── config.py                 # 环境变量加载
+├── requirements.txt          # Python 依赖
+├── Dockerfile                # 容器化配置
+│
+├── agent/
+│   ├── agent.py              # Agent 调度器：消息管理 + 工具协调 + 记忆集成
+│   └── __init__.py
+│
+├── chatbot/
+│   └── chatbot.py            # OpenAI SDK 调用 DeepSeek API
+│
+├── tools/
+│   ├── __init__.py           # ToolRegistry + @registry.register() 装饰器
+│   ├── calculator.py         # 安全数学计算（AST 白名单）
+│   ├── weather.py            # 天气查询（mock 数据）
+│   └── hotlist.py            # 今日热榜（GitHub 趋势 / 百度热搜）
+│
+├── memory/
+│   └── memory.py             # SQLite 持久化 CRUD
+│
+├── utils/
+│   └── logger.py             # 日志模块（标准 logging）
+│
+└── frontend/                 # React 聊天界面
+    ├── vite.config.ts        # Vite 配置（Tailwind + API 代理）
+    ├── src/
+    │   ├── App.tsx           # 聊天主界面
+    │   ├── index.css         # Tailwind 入口
+    │   └── main.tsx          # React 入口
+    └── package.json
+```
 
 ---
 
 ## 🛠️ 技术栈
 
-- **Python 3.11+**
-- **DeepSeek API**（OpenAI 兼容 SDK）
-- **FastAPI** + **Uvicorn**（服务化）
-- **SQLite**（持久化存储）
-- **Pydantic**（数据验证）
+| 层 | 技术 |
+|----|------|
+| 后端框架 | Python 3.12 + FastAPI + Uvicorn |
+| 大模型 | DeepSeek API（OpenAI 兼容 SDK） |
+| 持久化 | SQLite |
+| 数据校验 | Pydantic |
+| 前端框架 | React 19 + TypeScript |
+| 构建工具 | Vite |
+| 样式 | Tailwind CSS 4 |
+| 容器化 | Docker |
 
 ---
 
 ## 🚀 快速开始
 
 ### 1. 克隆项目
+
 ```bash
 git clone https://github.com/z19654433-dev/AI-Workspace.git
 cd AI-Workspace
-2. 创建虚拟环境并安装依赖
-bash
+```
+
+### 2. 配置后端
+
+```bash
+# 创建虚拟环境
 python -m venv .venv
+
 # Windows
 .venv\Scripts\activate
 # Linux/Mac
 source .venv/bin/activate
 
+# 安装依赖
 pip install -r requirements.txt
-3. 配置环境变量
-在项目根目录创建 .env 文件，填入你的 DeepSeek API Key：
 
-text
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxx
-4. 启动服务
-bash
+# 创建 .env 文件，填入你的 DeepSeek API Key
+echo DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxx > .env
+```
+
+### 3. 启动后端
+
+```bash
 uvicorn api:app --host 0.0.0.0 --port 8000
-访问 http://127.0.0.1:8000/docs 即可在 Swagger 中测试 API。
+```
 
-5. 使用示例
-bash
+访问 http://127.0.0.1:8000/docs 查看 Swagger 文档。
+
+### 4. 启动前端（新开一个终端）
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+浏览器打开 http://localhost:5173 即可开始对话。
+
+### 5. 测试 API
+
+```bash
 curl -X POST "http://127.0.0.1:8000/chat" \
      -H "Content-Type: application/json" \
-     -d '{"message": "今天河南天气怎么样", "session_id": "test"}'
-🧪 API 接口说明
-方法	路径	描述
-GET	/	健康检查，返回服务状态
-POST	/chat	与 Agent 对话，请求体需包含 message 和可选的 session_id
-请求体示例：
+     -d '{"message": "今天 GitHub 有什么热门项目", "session_id": "test"}'
+```
 
-json
-{
-  "message": "计算 12345 * 678",
-  "session_id": "user_001"
-}
-成功响应：
+---
 
-json
-{
-  "reply": "12345 乘以 678 等于 8372310",
-  "session_id": "user_001"
-}
-📈 版本迭代路线
-版本	功能	状态
-V1	终端交互	✅
-V2	DeepSeek API 接入	✅
-V3	上下文记忆（内存）	✅
-V4	SQLite 长期记忆 + 多会话	✅
-V5	FastAPI 服务化 + Swagger	✅
-V7	Function Calling 自主决策	✅
-V6	LangChain 集成（可选）	⏳ 计划中
-🐳 Docker 部署（可选）
-项目已提供 Dockerfile，在具备 Docker 环境的服务器上可一键构建并启动：
+## 🔧 现有工具
 
-bash
+| 工具 | 功能 | 调用示例 |
+|------|------|---------|
+| `calculate` | 安全数学计算 | "计算 12345 × 678" |
+| `get_weather` | 查询天气 | "今天河南天气怎么样" |
+| `get_hotlist` | 今日热榜 | "看看 GitHub 趋势" / "百度热搜" |
+
+### 加新工具
+
+```python
+from tools import registry
+
+@registry.register(description="查询新闻")
+def get_news(topic: str) -> str:
+    """获取指定主题的最新新闻"""
+    return f"{topic}的最新新闻..."
+```
+
+装饰器自动解析参数类型、生成 Schema、注册到全局注册表。
+
+---
+
+## 📈 版本路线
+
+| 版本 | 功能 | 状态 |
+|------|------|------|
+| V1 | 终端交互 CLI | ✅ |
+| V2 | DeepSeek API 接入 | ✅ |
+| V3 | 上下文记忆（内存） | ✅ |
+| V4 | SQLite 长期记忆 + 多会话 | ✅ |
+| V5 | FastAPI 服务化 + Swagger | ✅ |
+| V6 | Function Calling 自主决策 | ✅ |
+| V7 | 装饰器注册 + 安全求值器 | ✅ |
+| V8 | 热榜工具 + 日志模块 | ✅ |
+| V9 | React 前端聊天界面 | ✅ |
+| V10 | LangChain 集成（可选） | ⏳ 计划中 |
+| V11 | MCP 协议接入 | ⏳ 计划中 |
+
+---
+
+## 🐳 Docker 部署
+
+```bash
 docker build -t ai-agent .
 docker run -p 8000:8000 ai-agent
-注意：本地构建可能受网络限制，但配置已完成，可在云服务器上正常使用。
+```
 
-🤝 贡献与反馈
-本项目是作者为寻找 Python / Agent 开发实习 而构建的实战项目，欢迎提出 Issue 或 PR。
+---
 
-📄 License
+## 📄 License
+
 MIT License © 2026
-
-🙏 致谢
-DeepSeek 提供强大且高性价比的 API
-
-FastAPI 简化 Web 服务开发
-
-所有在开发过程中提供建议的开发者们
