@@ -19,3 +19,6 @@ Thumbs.db
 *.db
 # ChromaDB 向量存储
 knowledge/chroma_db/
+
+# 向量记忆数据库
+memory/vector_memory_db/
