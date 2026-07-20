@@ -1,6 +1,6 @@
-# 🧠 AI Agent · Python + DeepSeek + React
+# 🧠 RAG-Chatbot · Python + DeepSeek + React
 
-> 一个基于 **DeepSeek API** 和 **FastAPI** 的智能 Agent 全栈项目，具备长期记忆、多会话隔离、自主工具调用（Function Calling）能力，附带 **React 聊天界面**。
+> 一个基于 **DeepSeek API** 和 **FastAPI** 的 RAG 智能问答机器人，具备长期记忆、多会话隔离、自主工具调用（Function Calling）能力，附带 **React 聊天界面**。
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
@@ -83,8 +83,8 @@ AI-Workspace/
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/z19654433-dev/AI-Workspace.git
-cd AI-Workspace
+git clone https://github.com/z19654433-dev/RAG-Chatbot.git
+cd RAG-Chatbot
 ```
 
 ### 2. 配置后端
