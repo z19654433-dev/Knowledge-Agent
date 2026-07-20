@@ -11,6 +11,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [sessionId] = useState(() => 'session_' + Date.now().toString(36))
   const [modelProvider, setModelProvider] = useState('deepseek')
+  const [isDark, setIsDark] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // 自动滚动到底部
@@ -59,24 +60,31 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-white text-gray-800">
+    <div className={`flex flex-col h-dvh ${isDark ? "bg-gray-950 text-gray-100" : "bg-white text-gray-800"}`}>
       {/* 顶栏 */}
-      <header className="shrink-0 border-b border-gray-200 px-4 py-3">
+      <header className={`shrink-0 border-b px-4 py-3 ${isDark ? "border-gray-800" : "border-gray-200"}`}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-800">
+          <h1 className={`text-lg font-semibold ${isDark ? "text-gray-100" : "text-gray-800"}`}>
             AI Agent
           </h1>
           <div className="flex items-center gap-2">
             <select
               value={modelProvider}
               onChange={(e) => setModelProvider(e.target.value)}
-              className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 text-gray-700 cursor-pointer"
+              className={`text-xs rounded px-2 py-1 cursor-pointer ${isDark ? "bg-gray-800 text-gray-200 border-gray-600" : "bg-gray-100 text-gray-700 border-gray-300"} border`}
             >
               <option value="deepseek">DeepSeek</option>
               <option value="glm">智谱 GLM</option>
               <option value="qwen">通义千问</option>
               <option value="yi">零一万物</option>
             </select>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className={`text-xs px-2 py-1 rounded transition cursor-pointer ${isDark ? "text-yellow-400 hover:text-yellow-300" : "text-gray-400 hover:text-gray-600"}`}
+              title={isDark ? "切换到浅色" : "切换到深色"}
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
             <span className="text-xs text-gray-400 font-mono">
               {sessionId.slice(0, 12)}
             </span>
@@ -97,7 +105,7 @@ function App() {
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full mt-20 text-gray-400">
+            <div className={`flex flex-col items-center justify-center h-full mt-20 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
               <p className="text-4xl mb-4">🤖</p>
               <p className="text-lg">开始对话吧</p>
               <p className="text-sm mt-1">支持天气查询、数学计算、热榜查看等</p>
@@ -113,7 +121,7 @@ function App() {
                 className={`group max-w-[75%] rounded-2xl px-4 py-2.5 whitespace-pre-wrap leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-blue-600 text-white rounded-br-md'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                    : `bg-gray-100 text-gray-800 rounded-bl-md ${isDark ? "!bg-gray-800 !text-gray-100" : ""}`
                 }`}
               >
                 <div className="relative">
@@ -132,7 +140,7 @@ function App() {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+              <div className={`rounded-2xl rounded-bl-md px-4 py-3 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                 <span className="inline-flex gap-1">
                   <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                   <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
@@ -146,7 +154,7 @@ function App() {
       </main>
 
       {/* 输入区 */}
-      <footer className="shrink-0 border-t border-gray-200 bg-white px-4 py-3">
+      <footer className={`shrink-0 border-t px-4 py-3 ${isDark ? "border-gray-800 bg-gray-950" : "border-gray-200 bg-white"}`}>
         <div className="max-w-3xl mx-auto flex gap-2">
           <textarea
             value={input}
@@ -154,7 +162,7 @@ function App() {
             onKeyDown={handleKeyDown}
             placeholder="输入消息..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className={`flex-1 resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${isDark ? "border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500" : "border-gray-300 bg-white text-gray-800 placeholder-gray-400"}`}
           />
           <button
             onClick={sendMessage}
