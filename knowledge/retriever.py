@@ -24,6 +24,10 @@ class Retriever:
         logger.info("检索 \"%s\" → %d 条结果", query, len(docs))
         return docs
 
+    def get_langchain_retriever(self):
+        """返回 LangChain Retriever 对象（供 Chain 使用）"""
+        return self.store.get_retriever()
+
     def format_context(self, results: List[Document]) -> str:
         """将 Document 列表格式化为 LLM 上下文文本"""
         if not results:

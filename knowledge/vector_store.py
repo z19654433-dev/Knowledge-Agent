@@ -9,6 +9,7 @@ from langchain_core.vectorstores import VectorStoreRetriever
 
 from .config import config
 from .embeddings import get_embedding
+from .embeddings import get_embedding
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -62,8 +63,18 @@ class VectorStore:
         return self._store._collection.count()
 
     def delete_all(self):
+        import gc
+        # 删除旧 collection
         self._store.delete_collection()
-        logger.info("向量库已清空")
+        self._retriever = None
+        # 重建 Chroma 实例
+        embedding = get_embedding()
+        self._store = Chroma(
+            collection_name=config.COLLECTION_NAME,
+            embedding_function=embedding,
+            persist_directory=str(Path(config.VECTOR_DB_DIR)),
+        )
+        logger.info("向量库已清空并重建")
 
 
 _store_instance: VectorStore | None = None
