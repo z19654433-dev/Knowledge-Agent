@@ -18,6 +18,11 @@ class BaseLLM(ABC):
     def chat(self, messages, tools=None, tool_choice="auto"):
         ...
 
+    @abstractmethod
+    def chat_stream(self, messages, tools=None, tool_choice="auto"):
+        """流式调用，返回迭代器"""
+        ...
+
     @property
     @abstractmethod
     def display_name(self) -> str:
@@ -43,6 +48,13 @@ class DeepSeekAdapter(BaseLLM):
             kwargs["tool_choice"] = tool_choice
         return self.client.chat.completions.create(**kwargs)
 
+    def chat_stream(self, messages, tools=None, tool_choice="auto"):
+        kwargs = {"model": self.model, "messages": messages, "stream": True}
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = tool_choice
+        return self.client.chat.completions.create(**kwargs)
+
 
 class OpenAICompatibleAdapter(BaseLLM):
     """通用 OpenAI 兼容适配器"""
@@ -58,6 +70,13 @@ class OpenAICompatibleAdapter(BaseLLM):
 
     def chat(self, messages, tools=None, tool_choice="auto"):
         kwargs = {"model": self.model, "messages": messages}
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = tool_choice
+        return self.client.chat.completions.create(**kwargs)
+
+    def chat_stream(self, messages, tools=None, tool_choice="auto"):
+        kwargs = {"model": self.model, "messages": messages, "stream": True}
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = tool_choice
@@ -146,3 +165,9 @@ def chat(messages, tools=None, tool_choice="auto", provider: str = "deepseek"):
     """对外接口：支持每次请求指定模型"""
     llm = create_llm(provider)
     return llm.chat(messages, tools, tool_choice)
+
+
+def chat_stream(messages, tools=None, tool_choice="auto", provider: str = "deepseek"):
+    """流式对外接口"""
+    llm = create_llm(provider)
+    return llm.chat_stream(messages, tools, tool_choice)

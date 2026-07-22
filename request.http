@@ -1,0 +1,85 @@
+# ============================================================
+# Knowledge-Agent API 调试脚本（PyCharm HTTP Client）
+# 用法：用 PyCharm 打开本文件，点击每个请求左侧的绿色 ▶ 按钮即可发送
+# 前提：后端已在运行（python api.py，默认 http://localhost:8000）
+# 注意：知识库接口无需登录；/chat、/user/* 需要登录后带 Bearer token
+# ============================================================
+
+@host = http://localhost:8000
+
+### ─────────────────────────────────────────────
+### 知识库：重建索引（放完新文档后点这里）
+### 作用：扫描 knowledge/docs/ 下所有 .txt/.md/.pdf，切片并写入向量库
+### 重要：每次往 docs/ 加新文件，都要点这一下，新内容才会被搜到
+### ─────────────────────────────────────────────
+POST {{host}}/knowledge/index
+
+### ─────────────────────────────────────────────
+### 知识库：查询（基于知识库内容回答问题）
+### ─────────────────────────────────────────────
+POST {{host}}/knowledge/query
+Content-Type: application/json
+
+{
+  "question": "你的部署步骤是什么？"
+}
+
+### ─────────────────────────────────────────────
+### 知识库：上传文档（PDF / TXT / MD）
+### 更简单的做法：直接把文件复制进 knowledge/docs/，然后点上面的 index
+### 上传后同样需要再点一次 index 才会被检索
+### ─────────────────────────────────────────────
+POST {{host}}/knowledge/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="doc.pdf"
+< ./knowledge/docs/doc.pdf
+------WebKitFormBoundary--
+
+### ─────────────────────────────────────────────
+### 注册账号
+### ─────────────────────────────────────────────
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "123456"
+}
+
+### ─────────────────────────────────────────────
+### 登录（登录后自动把 token 存入全局变量 auth_token，下方请求直接复用）
+### ─────────────────────────────────────────────
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "123456"
+}
+
+> {%
+client.global.set("auth_token", response.body.token);
+%}
+
+### ─────────────────────────────────────────────
+### 发起对话（自动带上登录得到的 auth_token）
+### model_provider 可选：deepseek / glm / qwen / yi
+### ─────────────────────────────────────────────
+POST {{host}}/chat
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "message": "你好，介绍一下你自己",
+  "session_id": "default_session",
+  "model_provider": "deepseek"
+}
+
+### ─────────────────────────────────────────────
+### 获取我的会话列表（需登录）
+### ─────────────────────────────────────────────
+GET {{host}}/user/sessions
+Authorization: Bearer {{auth_token}}

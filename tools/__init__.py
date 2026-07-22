@@ -136,4 +136,5 @@ from . import calculator  # noqa: E402
 from . import weather     # noqa: E402
 from . import hotlist      # noqa: E402
 from . import rag_tool      # noqa: E402
+from . import web_search   # noqa: E402
 import knowledge               # noqa: E402
