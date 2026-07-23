@@ -67,3 +67,20 @@ def load_directory(doc_dir: str) -> List[Document]:
 
     logger.info("共加载 %d 个文档片段", len(all_docs))
     return all_docs
+
+
+def is_path_excluded(rel_path: str, excludes) -> bool:
+    """判断相对路径是否命中排除清单。
+
+    匹配规则（任一满足即排除）：
+      - 文件名等于某项（如 "API.md"）
+      - 相对路径等于某项（如 "secret/api.md"）
+      - 路径中包含某项作为文件夹名（如 ".trash"）
+    """
+    p = Path(rel_path)
+    base = p.name
+    parts = set(p.parts)
+    for ex in excludes:
+        if ex == base or ex == rel_path or ex in parts:
+            return True
+    return False

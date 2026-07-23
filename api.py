@@ -5,12 +5,15 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from agent.agent import Agent
 from auth import register as auth_register, login as auth_login, logout as auth_logout, verify_token, get_default_session, get_user_info as auth_get_user_info, update_display_name as auth_update_display_name, update_password as auth_update_password, get_user_sessions_list as auth_get_sessions, create_new_session as auth_create_session, delete_user_session as auth_delete_session, get_session_history as auth_get_session_history
-from knowledge.pipeline import index_documents, query as rag_query
+from knowledge.pipeline import index_documents, query as rag_query, index_obsidian
 from memory.memory import Memory
 from chatbot.chatbot import get_available_models
 from pathlib import Path
 import shutil
 import uvicorn
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # 用户级 LLM 密钥存储（建表在 Memory.__init__ 中完成）
 memory = Memory()
@@ -395,6 +398,62 @@ async def query_knowledge(request: KnowledgeQueryRequest):
         return KnowledgeQueryResponse(answer=answer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
+
+
+# ========== Obsidian 知识库接口（独立 collection，排除隐私文件）==========
+
+@app.post("/obsidian/index")
+async def index_obsidian_endpoint(force: bool = False):
+    """增量索引 Obsidian vault 到独立向量集合（自动排除 OBSIDIAN_EXCLUDE 清单中的隐私文件）。
+
+    - force=false：仅处理新增/变更/删除的文件（按 mtime 判断），效率高。
+    - force=true：清空后全量重建（vault 大改后使用）。
+    """
+    try:
+        result = index_obsidian(force=force)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("message"))
+        return {
+            "status": "success",
+            "result": result,
+            "message": "Obsidian 索引完成：{} 文件 / {} 切片".format(
+                result.get("indexed_files", 0), result.get("chunks", 0)
+            ),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"索引失败: {str(e)}")
+
+
+@app.get("/obsidian/status")
+async def obsidian_status():
+    """查看 Obsidian 索引状态：vault 路径、排除清单、已索引切片数。"""
+    from config import OBSIDIAN_VAULT_DIR, OBSIDIAN_COLLECTION, OBSIDIAN_EXCLUDE
+    from knowledge.vector_store import get_vector_store
+
+    try:
+        store = get_vector_store(OBSIDIAN_COLLECTION)
+        count = store.count()
+    except Exception:
+        count = -1
+    return {
+        "vault_dir": OBSIDIAN_VAULT_DIR,
+        "collection": OBSIDIAN_COLLECTION,
+        "excluded": OBSIDIAN_EXCLUDE,
+        "indexed_chunks": count,
+        "configured": bool(OBSIDIAN_VAULT_DIR),
+    }
+
+
+@app.on_event("startup")
+def _startup_obsidian_watcher():
+    """后端启动时自动拉起 Obsidian 文件监视器（若已配置 vault）。"""
+    try:
+        from knowledge.obsidian_watcher import start_obsidian_watcher
+        start_obsidian_watcher()
+    except Exception as e:  # noqa: BLE001
+        logger.warning("启动 Obsidian 监视器失败（不影响主服务）: %s", e)
 
 
 if __name__ == "__main__":
